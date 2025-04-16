@@ -1,6 +1,6 @@
 # Cloudflare Tunnel, Traefik, CrowdSec ve Authentik Docker Compose Kurulumu
 
-Bu proje, Cloudflare Tunnel, Traefik, CrowdSec, Authentik ve Portainer Business Edition'ı tek bir Docker Compose ortamında çalıştırmak için gereken tüm dosyaları içerir. Bu ortam, *.ofhome.cloud alan adları için güvenli ve otomatik bir altyapı sağlar.
+Bu proje, Cloudflare Tunnel, Traefik, CrowdSec, Authentik ve Portainer Business Edition'ı tek bir Docker Compose ortamında çalıştırmak için gereken tüm dosyaları içerir. Bu ortam, *.example.com alan adları için güvenli ve otomatik bir altyapı sağlar.
 
 ## Özellikler
 
