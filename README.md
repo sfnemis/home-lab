@@ -28,7 +28,7 @@ nano .env
 
 2. Aşağıdaki değerleri kendi bilgilerinizle güncelleyin:
 
-- `DOMAIN`: Ana alan adınız (örn. ofhome.cloud)
+- `DOMAIN`: Ana alan adınız (örn. example.com)
 - `CLOUDFLARE_EMAIL`: Cloudflare e-posta adresiniz
 - `CLOUDFLARE_API_KEY`: Cloudflare API anahtarınız
 - `CLOUDFLARE_TUNNEL_TOKEN`: Cloudflare Tunnel token'ınız
