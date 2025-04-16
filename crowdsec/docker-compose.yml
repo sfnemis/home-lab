@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.6.8
+    container_name: crowdsec
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - GID=${PGID}
+      - UID=${PUID}
+      - COLLECTIONS=${CROWDSEC_COLLECTIONS}
+    volumes:
+      - ./config:/etc/crowdsec
+      - ./data:/var/lib/crowdsec/data
+      - ./acquis.yaml:/etc/crowdsec/acquis.yaml
+      - /var/log/traefik:/var/log/traefik:ro
+    networks:
+      - proxy
+    ports:
+      - "127.0.0.1:6060:6060" # API port (LAPI) - internal only
+    depends_on:
+      - db
+    links:
+      - db:db
+
+  db:
+    image: postgres:16-alpine
+    container_name: crowdsec-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=crowdsec
+      - POSTGRES_PASSWORD=${CROWDSEC_DB_PASSWORD}
+      - POSTGRES_DB=crowdsec
+    volumes:
+      - crowdsec-db-data:/var/lib/postgresql/data
+    networks:
+      - proxy
+
+  bouncer:
+    image: maxlerebourg/crowdsec-bouncer-traefik-plugin:v1.4.2
+    container_name: crowdsec-bouncer
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - CROWDSEC_BOUNCER_API_KEY=${CROWDSEC_API_KEY}
+      - CROWDSEC_AGENT_HOST=crowdsec:6060
+      - CROWDSEC_BOUNCER_LOG_LEVEL=info
+    networks:
+      - proxy
+    depends_on:
+      - crowdsec
+
+volumes:
+  crowdsec-db-data:
+    name: crowdsec-db-data
+
+networks:
+  proxy:
+    external: true
+    name: ${DOCKER_NETWORK}

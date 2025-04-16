@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2025.4.0
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TZ=${TZ}
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - proxy
+    volumes:
+      - ./config:/etc/cloudflared
+    depends_on:
+      - traefik
+
+networks:
+  proxy:
+    external: true
+    name: ${DOCKER_NETWORK}

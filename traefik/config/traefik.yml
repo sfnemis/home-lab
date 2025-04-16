@@ -1,0 +1,70 @@
+## Traefik Ana Yapılandırma
+
+# Global yapılandırma
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+# API ve Dashboard yapılandırma
+api:
+  dashboard: true
+  insecure: false
+
+# Docker provider yapılandırma
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    watch: true
+    exposedByDefault: false
+    network: "proxy"
+    swarmMode: false
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true
+
+# Entry points yapılandırma
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+  traefik:
+    address: ":8080"
+
+# Log yapılandırma
+log:
+  level: "INFO"
+  filePath: "/var/log/traefik/traefik.log"
+  format: "json"
+
+# Access logs
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: "json"
+  bufferingSize: 100
+  filters:
+    statusCodes:
+      - "400-499"
+      - "500-599"
+
+# Metrics
+metrics:
+  prometheus:
+    entryPoint: traefik
+
+# Certificate resolvers
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: "admin@example.com"
+      storage: "/etc/traefik/acme/acme.json"
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"

@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  postgresql:
+    image: postgres:16-alpine
+    container_name: authentik-postgres
+    restart: unless-stopped
+    volumes:
+      - authentik-database:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${AUTHENTIK_POSTGRES_PASSWORD}
+      - POSTGRES_USER=authentik
+      - POSTGRES_DB=authentik
+    networks:
+      - proxy
+
+  redis:
+    image: redis:7-alpine
+    container_name: authentik-redis
+    restart: unless-stopped
+    command: --save 60 1 --loglevel warning
+    volumes:
+      - authentik-redis:/data
+    networks:
+      - proxy
+
+  server:
+    image: ghcr.io/goauthentik/server:2025.2.4
+    container_name: authentik-server
+    restart: unless-stopped
+    command: server
+    environment:
+      - AUTHENTIK_REDIS__HOST=redis
+      - AUTHENTIK_POSTGRESQL__HOST=postgresql
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_POSTGRES_PASSWORD}
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+      - AUTHENTIK_COOKIE_DOMAIN=${ROOT_DOMAIN}
+    volumes:
+      - authentik-media:/media
+      - authentik-custom-templates:/templates
+    networks:
+      - proxy
+    depends_on:
+      - postgresql
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`auth.${ROOT_DOMAIN}`)"
+      - "traefik.http.routers.authentik.entrypoints=websecure"
+      - "traefik.http.routers.authentik.tls=true"
+      - "traefik.http.routers.authentik.tls.certresolver=cloudflare"
+      - "traefik.http.routers.authentik.middlewares=crowdsec-bouncer"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+
+  worker:
+    image: ghcr.io/goauthentik/server:2025.2.4
+    container_name: authentik-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      - AUTHENTIK_REDIS__HOST=redis
+      - AUTHENTIK_POSTGRESQL__HOST=postgresql
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_POSTGRES_PASSWORD}
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+    volumes:
+      - authentik-media:/media
+      - authentik-custom-templates:/templates
+    networks:
+      - proxy
+    depends_on:
+      - postgresql
+      - redis
+
+  outpost:
+    image: ghcr.io/goauthentik/outpost:2025.2.4
+    container_name: authentik-outpost
+    restart: unless-stopped
+    environment:
+      - AUTHENTIK_HOST=http://server:9000
+      - AUTHENTIK_INSECURE=true
+      - AUTHENTIK_TOKEN=${AUTHENTIK_OUTPOST_TOKEN}
+    networks:
+      - proxy
+    depends_on:
+      - server
+
+volumes:
+  authentik-database:
+    name: authentik-database
+  authentik-redis:
+    name: authentik-redis
+  authentik-media:
+    name: authentik-media
+  authentik-custom-templates:
+    name: authentik-custom-templates
+
+networks:
+  proxy:
+    external: true
+    name: ${DOCKER_NETWORK}

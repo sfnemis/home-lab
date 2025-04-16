@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  portainer:
+    image: portainer/portainer-ee:2.19.4
+    container_name: portainer
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer-data:/data
+    networks:
+      - proxy
+    # Portainer'ın varsayılan portu 9000'dir, 9443'ü de kullanmak mümkündür
+    # Authentik ile port çakışmasını önlemek için portu değiştiriyoruz
+    command: --admin-password-file /data/secrets/admin-password.txt --server-port=9001
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${ROOT_DOMAIN}`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls=true"
+      - "traefik.http.routers.portainer.tls.certresolver=cloudflare"
+      - "traefik.http.routers.portainer.middlewares=crowdsec-bouncer,authentik-outpost@docker"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9001"
+
+volumes:
+  portainer-data:
+    name: portainer-data
+
+networks:
+  proxy:
+    external: true
+    name: ${DOCKER_NETWORK}
