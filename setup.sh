@@ -3,6 +3,12 @@
 # Ana dizin
 BASE_DIR=$(pwd)
 
+# Ana .env dosyasının varlığını kontrol et
+if [ ! -f "$BASE_DIR/.env" ]; then
+    echo "HATA: Ana .env dosyası bulunamadı. Lütfen .env dosyasını oluşturun."
+    exit 1
+fi
+
 # Ana .env dosyasını yükle
 set -a
 source .env
@@ -27,7 +33,8 @@ if [ -z "$CROWDSEC_API_KEY" ] || [ "$CROWDSEC_API_KEY" = "change-me-to-secure-ke
     echo "CrowdSec ve veritabanı başlatılıyor..."
     cd $BASE_DIR/crowdsec
     # docker-compose.yml dosyasından geçici olarak bouncer'ı çıkararak çalıştıralım
-    grep -v "bouncer:" -A 15 docker-compose.yml > docker-compose-temp.yml
+    cp docker-compose.yml docker-compose-temp.yml
+    sed -i '/bouncer:/,+11d' docker-compose-temp.yml
     docker-compose -f docker-compose-temp.yml up -d
     sleep 15  # CrowdSec'in tamamen başlaması için daha uzun bekleyelim
     
@@ -50,7 +57,7 @@ if [ -z "$CROWDSEC_API_KEY" ] || [ "$CROWDSEC_API_KEY" = "change-me-to-secure-ke
     
     # Ana .env dosyasını güncelle
     echo "API anahtarı .env dosyasına ekleniyor: $BOUNCER_KEY"
-    sed -i.bak "s|CROWDSEC_API_KEY=.*|CROWDSEC_API_KEY=$BOUNCER_KEY|" .env
+    sed -i "s|CROWDSEC_API_KEY=.*|CROWDSEC_API_KEY=$BOUNCER_KEY|" $BASE_DIR/.env
     
     # Geçici CrowdSec'i durdur ve temizle
     echo "Geçici CrowdSec durduruluyor..."
@@ -59,7 +66,7 @@ if [ -z "$CROWDSEC_API_KEY" ] || [ "$CROWDSEC_API_KEY" = "change-me-to-secure-ke
     
     # .env dosyasını yeniden yükle
     set -a
-    source .env
+    source $BASE_DIR/.env
     set +a
     
     echo "CrowdSec API anahtarı başarıyla oluşturuldu: $BOUNCER_KEY"
@@ -68,7 +75,11 @@ fi
 # .env dosyalarını kopyala
 echo "Servis-spesifik .env dosyaları hazırlanıyor..."
 for service in traefik crowdsec cloudflare-tunnel authentik portainer watchtower; do
-    envsubst < ${service}/.env.template > ${service}/.env
+    if [ -f "${service}/.env.template" ]; then
+        envsubst < ${service}/.env.template > ${service}/.env
+    else
+        echo "UYARI: ${service}/.env.template dosyası bulunamadı, bu servis için .env oluşturulamadı."
+    fi
 done
 
 # Portainer admin şifresini oluştur

@@ -25,7 +25,7 @@ services:
       - proxy
 
   server:
-    image: ghcr.io/goauthentik/server:2025.2.4
+    image: ghcr.io/goauthentik/server:2023.10.5
     container_name: authentik-server
     restart: unless-stopped
     command: server
@@ -56,7 +56,7 @@ services:
       - "traefik.http.services.authentik.loadbalancer.server.port=9000"
 
   worker:
-    image: ghcr.io/goauthentik/server:2025.2.4
+    image: ghcr.io/goauthentik/server:2023.10.5
     container_name: authentik-worker
     restart: unless-stopped
     command: worker
@@ -78,7 +78,7 @@ services:
       - redis
 
   outpost:
-    image: ghcr.io/goauthentik/outpost:2025.2.4
+    image: ghcr.io/goauthentik/outpost:2023.10.5
     container_name: authentik-outpost
     restart: unless-stopped
     environment:

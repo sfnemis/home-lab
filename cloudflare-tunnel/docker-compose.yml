@@ -13,8 +13,9 @@ services:
       - proxy
     volumes:
       - ./config:/etc/cloudflared
-    depends_on:
-      - traefik
+    # Traefik bağımlılığını kaldırıyoruz
+    # depends_on:
+    #   - traefik
 
 networks:
   proxy:
