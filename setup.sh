@@ -23,13 +23,20 @@ mkdir -p portainer/data/secrets
 if [ -z "$CROWDSEC_API_KEY" ] || [ "$CROWDSEC_API_KEY" = "change-me-to-secure-key" ]; then
     echo "CrowdSec API anahtarı henüz oluşturulmamış. İlk aşama kurulumu başlatılıyor..."
     
-    # İlk olarak sadece CrowdSec'i başlat (bouncer olmadan)
-    echo "CrowdSec başlatılıyor..."
+    # Önce sadece CrowdSec ve DB konteynerleri başlat (bouncer olmadan)
+    echo "CrowdSec ve veritabanı başlatılıyor..."
     cd $BASE_DIR/crowdsec
-    # Geçici olarak bouncer servisini devre dışı bırakmış bir yaml dosyası oluşturalım
-    cat docker-compose.yml | grep -v "bouncer:" -A 10 | grep -v "depends_on:" -A 2 > docker-compose-temp.yml
+    # docker-compose.yml dosyasından geçici olarak bouncer'ı çıkararak çalıştıralım
+    grep -v "bouncer:" -A 15 docker-compose.yml > docker-compose-temp.yml
     docker-compose -f docker-compose-temp.yml up -d
-    sleep 10
+    sleep 15  # CrowdSec'in tamamen başlaması için daha uzun bekleyelim
+    
+    # Konteynerin çalıştığını kontrol et
+    if ! docker ps | grep -q crowdsec; then
+        echo "HATA: CrowdSec konteynerı başlatılamadı!"
+        docker-compose -f docker-compose-temp.yml logs
+        exit 1
+    fi
     
     # API anahtarını oluştur
     echo "CrowdSec API anahtarı oluşturuluyor..."
@@ -37,14 +44,15 @@ if [ -z "$CROWDSEC_API_KEY" ] || [ "$CROWDSEC_API_KEY" = "change-me-to-secure-ke
     
     if [ -z "$BOUNCER_KEY" ]; then
         echo "HATA: CrowdSec API anahtarı oluşturulamadı!"
+        docker exec crowdsec cscli bouncers list
         exit 1
     fi
     
     # Ana .env dosyasını güncelle
-    echo "API anahtarı .env dosyasına ekleniyor..."
-    sed -i "s|CROWDSEC_API_KEY=.*|CROWDSEC_API_KEY=$BOUNCER_KEY|" .env
+    echo "API anahtarı .env dosyasına ekleniyor: $BOUNCER_KEY"
+    sed -i.bak "s|CROWDSEC_API_KEY=.*|CROWDSEC_API_KEY=$BOUNCER_KEY|" .env
     
-    # CrowdSec'i durdur
+    # Geçici CrowdSec'i durdur ve temizle
     echo "Geçici CrowdSec durduruluyor..."
     docker-compose -f docker-compose-temp.yml down
     rm docker-compose-temp.yml
@@ -81,7 +89,14 @@ sleep 10
 echo "2/6: CrowdSec başlatılıyor..."
 cd $BASE_DIR/crowdsec
 docker-compose up -d
-sleep 5
+sleep 8
+
+# CrowdSec'in düzgün çalıştığını kontrol et
+echo "CrowdSec çalışma durumu kontrol ediliyor..."
+if ! docker ps | grep -q crowdsec-bouncer; then
+    echo "UYARI: CrowdSec Bouncer başlatılamadı!"
+    docker-compose logs bouncer
+fi
 
 # Cloudflare Tunnel'ı başlat
 echo "3/6: Cloudflare Tunnel başlatılıyor..."

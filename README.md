@@ -34,7 +34,7 @@ nano .env
 - `CLOUDFLARE_TUNNEL_TOKEN`: Cloudflare Tunnel token'ınız
 - `AUTHENTIK_SECRET_KEY`: Authentik için güvenli bir anahtar
 - `AUTHENTIK_POSTGRES_PASSWORD`: Authentik veritabanı için güvenli bir şifre
-- `CROWDSEC_API_KEY`: CrowdSec API anahtarı
+- `CROWDSEC_API_KEY`: CrowdSec API anahtarı (kurulum sırasında otomatik oluşturulacak)
 - `PORTAINER_ADMIN_PASSWORD`: Portainer admin şifresi
 
 3. Network oluşturma ve kurulum betiğini çalıştırın:
@@ -85,7 +85,7 @@ labels:
 
 - Bu yapılandırmada tüm dış trafiğin Cloudflare Tunnel üzerinden geçmesi ve hiçbir portun doğrudan internete açık olmaması önerilir.
 - `.env` dosyalarındaki tüm şifreleri ve API anahtarlarını güçlü ve benzersiz değerlerle değiştirin.
-- CrowdSec yapılandırmasını kendi ihtiyaçlarınıza göre özelleştirin.
+- CrowdSec API anahtarı kurulum sırasında otomatik olarak oluşturulur.
 
 ## Bakım
 
@@ -102,6 +102,24 @@ Tüm servisleri yeniden başlatmak için:
 ```
 
 ## Sorun Giderme
+
+### CrowdSec Bouncer Sorunu
+
+Eğer CrowdSec Bouncer başlatılma sorunu yaşarsanız, API anahtarının doğru oluşturulduğundan emin olun:
+
+```bash
+# CrowdSec durumunu kontrol et
+docker ps | grep crowdsec
+
+# CrowdSec loglarını kontrol et
+docker logs crowdsec
+
+# Bouncer loglarını kontrol et
+docker logs crowdsec-bouncer
+
+# API anahtarını manuel oluştur
+docker exec crowdsec cscli bouncers add traefik-bouncer -o raw
+```
 
 ### Logları Kontrol Etme
 
@@ -129,7 +147,7 @@ Bu projede kullanılan Docker imajları aşağıdaki resmi kaynaklardan alınmı
 
 - Traefik: [traefik:v3.3.5](https://hub.docker.com/_/traefik)
 - CrowdSec: [crowdsecurity/crowdsec:v1.6.8](https://hub.docker.com/r/crowdsecurity/crowdsec)
-- CrowdSec Bouncer: [maxlerebourg/crowdsec-bouncer-traefik-plugin:v1.4.2](https://github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin)
+- CrowdSec Bouncer: [crowdsecurity/traefik-bouncer:v0.3.5](https://hub.docker.com/r/crowdsecurity/traefik-bouncer)
 - Cloudflare Tunnel: [cloudflare/cloudflared:2025.4.0](https://hub.docker.com/r/cloudflare/cloudflared)
 - Authentik: [ghcr.io/goauthentik/server:2025.2.4](https://github.com/goauthentik/authentik)
 - Portainer: [portainer/portainer-ee:2.19.4](https://hub.docker.com/r/portainer/portainer-ee)

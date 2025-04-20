@@ -38,7 +38,7 @@ services:
       - proxy
 
   bouncer:
-    image: maxlerebourg/crowdsec-bouncer-traefik-plugin:v1.4.2
+    image: crowdsecurity/traefik-bouncer:v0.3.5
     container_name: crowdsec-bouncer
     restart: unless-stopped
     environment:
