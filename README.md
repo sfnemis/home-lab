@@ -32,7 +32,10 @@ nano .env
 - `CLOUDFLARE_EMAIL`: Cloudflare e-posta adresiniz
 - `CLOUDFLARE_API_KEY`: Cloudflare API anahtarınız
 - `CLOUDFLARE_TUNNEL_TOKEN`: Cloudflare Tunnel token'ınız
-- `AUTHENTIK_SECRET_KEY`: Authentik için güvenli bir anahtar
+- `AUTHENTIK_SECRET_KEY`: Authentik için güvenli bir anahtar (aşağıdaki komutla oluşturabilirsiniz)
+  ```bash
+  openssl rand -hex 32
+  ```
 - `AUTHENTIK_POSTGRES_PASSWORD`: Authentik veritabanı için güvenli bir şifre
 - `CROWDSEC_API_KEY`: CrowdSec API anahtarı (kurulum sırasında otomatik oluşturulacak)
 - `PORTAINER_ADMIN_PASSWORD`: Portainer admin şifresi
@@ -147,7 +150,7 @@ Bu projede kullanılan Docker imajları aşağıdaki resmi kaynaklardan alınmı
 
 - Traefik: [traefik:v3.3.5](https://hub.docker.com/_/traefik)
 - CrowdSec: [crowdsecurity/crowdsec:v1.6.8](https://hub.docker.com/r/crowdsecurity/crowdsec)
-- CrowdSec Bouncer: [crowdsecurity/traefik-bouncer:v0.3.5](https://hub.docker.com/r/crowdsecurity/traefik-bouncer)
+- CrowdSec Bouncer: [fbonalair/traefik-crowdsec-bouncer:latest](https://hub.docker.com/r/fbonalair/traefik-crowdsec-bouncer)
 - Cloudflare Tunnel: [cloudflare/cloudflared:2025.4.0](https://hub.docker.com/r/cloudflare/cloudflared)
 - Authentik: [ghcr.io/goauthentik/server:2025.2.4](https://github.com/goauthentik/authentik)
 - Portainer: [portainer/portainer-ee:2.19.4](https://hub.docker.com/r/portainer/portainer-ee)
