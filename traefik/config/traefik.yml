@@ -17,7 +17,6 @@ providers:
     watch: true
     exposedByDefault: false
     network: "proxy"
-    swarmMode: false
   file:
     directory: "/etc/traefik/dynamic"
     watch: true
@@ -26,11 +25,8 @@ providers:
 entryPoints:
   web:
     address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
+    # HTTP -> HTTPS yönlendirmesini kaldırıyoruz
+    # Cloudflare Tunnel zaten HTTPS kullanıyor
   websecure:
     address: ":443"
   traefik:
@@ -38,7 +34,7 @@ entryPoints:
 
 # Log yapılandırma
 log:
-  level: "INFO"
+  level: "DEBUG"
   filePath: "/var/log/traefik/traefik.log"
   format: "json"
 

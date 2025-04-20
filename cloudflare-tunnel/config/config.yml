@@ -1,12 +1,17 @@
-tunnel: <your-tunnel-id>
+tunnel: b7f13e65-7c9f-44bb-96b3-90c32fe9a1ee
 credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
-  # Traefik'e yönlendirme
+  # Traefik'e yönlendirme - düzeltilmiş adres ve port
   - hostname: "*.ofhome.cloud"
-    service: http://traefik:443
+    service: http://traefik:80
     originRequest:
-      originServerName: "{{hostname}}"
+      noTLSVerify: true
+      
+  # Ana domain için
+  - hostname: "ofhome.cloud"
+    service: http://traefik:80
+    originRequest:
       noTLSVerify: true
 
   # Varsayılan fallback
